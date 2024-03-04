@@ -1,9 +1,13 @@
 package com.zdf.worker.enums;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 // 任务状态
+@Getter
 public enum TaskStatus {
     // 待执行
     PENDING(0x01),
@@ -13,15 +17,12 @@ public enum TaskStatus {
     SUCCESS(0x04),
     // 执行失败
     FAIL(0x08);
+    private final int status;
 
     private TaskStatus(int status) {
         this.status = status;
     }
-    private int status;
 
-    public int getStatus() {
-        return this.status;
-    }
 
     public List<TaskStatus> getAliveStatus() {
         List<TaskStatus> aliveList = new ArrayList<>();
@@ -29,6 +30,7 @@ public enum TaskStatus {
         aliveList.add(EXECUTING);
         return aliveList;
     }
+
     public List<TaskStatus> getFailStatus() {
         List<TaskStatus> failList = new ArrayList<>();
         failList.add(FAIL);
@@ -43,9 +45,7 @@ public enum TaskStatus {
 
     public List<TaskStatus> getAllStatus() {
         List<TaskStatus> list = new ArrayList<>();
-        for (TaskStatus value : TaskStatus.values()) {
-            list.add(value);
-        }
+        Collections.addAll(list, TaskStatus.values());
         return list;
     }
 }

@@ -1,6 +1,6 @@
 package com.zdf.worker.http;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.zdf.worker.constant.TaskUrl;
 import com.zdf.worker.data.AsyncTaskRequest;
 import com.zdf.worker.data.AsyncTaskSetRequest;
@@ -33,7 +33,7 @@ public class FlowServerImpl implements FlowServer {
 
     // 拼接url参数
     private String getParamStr(Map<String, String> params) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("?");
         for (Map.Entry<String, String> entry : params.entrySet()) {
             sb.append(entry.getKey()).append("=").append(entry.getValue()).append("&");

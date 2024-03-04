@@ -1,5 +1,7 @@
 package com.zdf.worker.boot;
 
+import com.zdf.worker.lock.LockParam;
+import com.zdf.worker.lock.RedisLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.zdf.worker.Client.TaskFlower;
@@ -25,7 +27,7 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AppLaunch implements Launch{
+public class AppLaunch implements Launch {
     final TaskFlower taskFlower;//用于发送请求
 
     public static String packageName; //要执行的类的包名
@@ -53,6 +55,7 @@ public class AppLaunch implements Launch{
     public AppLaunch() {
         this(0);
     }
+
     public AppLaunch(int scheduleLimit) {
         scheduleCfgDic = new ConcurrentHashMap<>();
 
@@ -77,33 +80,30 @@ public class AppLaunch implements Launch{
         ScheduleConfig scheduleConfig = scheduleCfgDic.get(taskType.getSimpleName());
         // 如果用户没有配置时间间隔就使用默认时间间隔
         intervalTime = scheduleConfig.getSchedule_interval() == 0 ? TaskConstant.DEFAULT_TIME_INTERVAL * 1000L : scheduleConfig.getSchedule_interval() * 1000L;
-        this.threadPoolExecutor = new ThreadPoolExecutor(concurrentRunTimes, MaxConcurrentRunTimes, intervalTime + 1, TimeUnit.SECONDS, new LinkedBlockingQueue<>(UserConfig.QUEUE_SIZE));
-        for(;;) {
+        this.threadPoolExecutor = new ThreadPoolExecutor(concurrentRunTimes,
+                MaxConcurrentRunTimes,
+                intervalTime + 1,
+                TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(UserConfig.QUEUE_SIZE));
+        for (; ; ) {
+            // 如果线程池等待队列大小 减去 线程池中尚未开始执行的任务 比 一次要拉取的任务数量多
             if (UserConfig.QUEUE_SIZE - threadPoolExecutor.getQueue().size() >= scheduleLimit) {
                 execute(taskType);
             }
             try {
-                Thread.sleep(intervalTime + (int)(Math.random() * 500));
+                Thread.sleep(intervalTime + (int) (Math.random() * 500));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
         }
-//        for (int i = 0; i < concurrentRunTimes; i++) {
-//            // 前后波动500ms
-//            int step = (int) (Math.random() * 500 + 1);
-//            // 拉取任务
-//            threadPoolExecutor.scheduleAtFixedRate(this::execute, step * 3L, intervalTime + step, TimeUnit.MILLISECONDS);
-//        }
     }
 
     public void execute(Class<?> taskType) {
         List<AsyncTaskBase> asyncTaskBaseList = scheduleTask(taskType);
-        if (asyncTaskBaseList == null) {
+        if (asyncTaskBaseList == null || asyncTaskBaseList.isEmpty()) {
             return;
         }
-        int size = asyncTaskBaseList.size();
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < asyncTaskBaseList.size(); i++) {
             int finalI = i;
             threadPoolExecutor.execute(() -> executeTask(asyncTaskBaseList, finalI));
         }
@@ -113,18 +113,12 @@ public class AppLaunch implements Launch{
     private List<AsyncTaskBase> scheduleTask(Class<?> taskType) {
         try {
             // 开始执行时，做点事，这里就是简单的打印了一句话，供后续扩展使用
-            observerManager.wakeupObserver(ObserverType.onBoot);
+            observerManager.wakeUpObserver(ObserverType.onBoot);
         } catch (InvocationTargetException | IllegalAccessException e) {
             e.printStackTrace();
         }
-
         // 调用拉取任务接口拉取任务
-        List<AsyncTaskBase> asyncTaskBaseList = getAsyncTaskBases(observerManager, taskType);
-        // 为空判断
-        if (asyncTaskBaseList == null || asyncTaskBaseList.size() == 0) {
-            return null;
-        }
-        return asyncTaskBaseList;
+        return getAsyncTaskBases(observerManager, taskType);
     }
 
     // 执行任务
@@ -132,7 +126,7 @@ public class AppLaunch implements Launch{
         AsyncTaskBase v = asyncTaskBaseList.get(i);
         try {
             // 执行前干点事，这里就打印了一句话，后续可以扩展
-            observerManager.wakeupObserver(ObserverType.onExecute, v);
+            observerManager.wakeUpObserver(ObserverType.onExecute, v);
         } catch (InvocationTargetException | IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -152,7 +146,7 @@ public class AppLaunch implements Launch{
         } catch (Exception e) {
             try {
                 // 执行出现异常了（任务执行失败了）更改任务状态为PENDING，重试次数+1，超过重试次数设置为FAIL
-                observerManager.wakeupObserver(ObserverType.onError, v, scheduleCfgDic.get(v.getTask_type()), asyncTaskBaseList, aClass, e);
+                observerManager.wakeUpObserver(ObserverType.onError, v, scheduleCfgDic.get(v.getTask_type()), asyncTaskBaseList, aClass, e);
                 return;
             } catch (InvocationTargetException | IllegalAccessException ex) {
                 ex.printStackTrace();
@@ -160,48 +154,45 @@ public class AppLaunch implements Launch{
         }
         try {
             // 正常执行成功了干点事，方便后续扩展
-            observerManager.wakeupObserver(ObserverType.onFinish, v, asyncTaskSetStage, aClass);
+            observerManager.wakeUpObserver(ObserverType.onFinish, v, asyncTaskSetStage, aClass);
         } catch (InvocationTargetException | IllegalAccessException e) {
             e.printStackTrace();
         }
     }
 
     public Class<?> getaClass(String taskType) throws ClassNotFoundException {
-        Class<?> aClass = Class.forName(packageName + "." + taskType);
-        return aClass;
+        return Class.forName(packageName + "." + taskType);
     }
 
     private List<AsyncTaskBase> getAsyncTaskBases(ObserverManager observerManager, Class<?> taskType) {
-// 分布式锁的参数
-        //        LockParam lockParam = new LockParam(LOCK_KEY);
+        // 分布式锁的参数
+        LockParam lockParam = new LockParam(LOCK_KEY);
         // 分布式锁
-//        RedisLock redisLock = new RedisLock(lockParam);
+        RedisLock redisLock = new RedisLock(lockParam);
         List<AsyncTaskReturn> taskList = null;
         try {
             // 上锁
-         //   if (redisLock.lock()) {
-            // 调用http请求接口
+            if (redisLock.lock()) {
+                // 调用http请求接口 获取传入参数的任务类型的且是待执行的任务
                 taskList = taskFlower.getTaskList(taskType, TaskStatus.PENDING.getStatus(), scheduleCfgDic.get(taskType.getSimpleName()).getSchedule_limit());
-                if (taskList == null || taskList.size() == 0) {
+                if (taskList == null || taskList.isEmpty()) {
                     logger.warn("no task to deal!");
                     return null;
                 }
                 try {
                     List<AsyncTaskBase> asyncTaskBaseList = new ArrayList<>();
-                    observerManager.wakeupObserver(ObserverType.onObtain, taskList, asyncTaskBaseList);
+                    observerManager.wakeUpObserver(ObserverType.onObtain, taskList, asyncTaskBaseList);
                     return asyncTaskBaseList;
                 } catch (InvocationTargetException | IllegalAccessException e) {
                     e.printStackTrace();
                 }
-       //     }
+            }
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            // 释放锁
+            redisLock.unlock();
         }
-//        finally {
-        // 释放锁
-//            redisLock.unlock();
-//        }
-
         return null;
     }
 
@@ -230,12 +221,11 @@ public class AppLaunch implements Launch{
     }
 
 
-
-
     @Override
     public int destroy() {
         return 0;
     }
+
     // 枚举
     public enum ObserverType {
         onBoot(0),

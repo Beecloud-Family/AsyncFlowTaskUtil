@@ -19,7 +19,7 @@ public class ObserverManager {
     }
 
     // 通过发射找到对应的方法执行
-    public void wakeupObserver(AppLaunch.ObserverType observerType, Object... params) throws InvocationTargetException, IllegalAccessException {
+    public void wakeUpObserver(AppLaunch.ObserverType observerType, Object... params) throws InvocationTargetException, IllegalAccessException {
         for (ObserverFunction observer : observers) {
             for (Method method : observer.getClass().getMethods()) {
                 if (method.getName().equals(observerType.name())) {
