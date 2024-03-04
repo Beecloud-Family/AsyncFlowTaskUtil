@@ -2,7 +2,7 @@ package com.zdf.flowsvr.controller;
 
 import com.zdf.flowsvr.constant.ErrorStatusReturn;
 import com.zdf.flowsvr.data.ReturnStatus;
-import com.zdf.flowsvr.data.ScheduleConfig;
+import com.zdf.flowsvr.data.po.ScheduleConfig;
 import com.zdf.flowsvr.service.ScheduleConfigService;
 import com.zdf.flowsvr.util.Utils;
 import org.slf4j.Logger;

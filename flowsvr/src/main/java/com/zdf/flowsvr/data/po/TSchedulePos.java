@@ -1,4 +1,4 @@
-package com.zdf.flowsvr.data;
+package com.zdf.flowsvr.data.po;
 
 import lombok.Data;
 

@@ -1,6 +1,6 @@
 package com.zdf.flowsvr.dao;
 
-import com.zdf.flowsvr.data.TSchedulePos;
+import com.zdf.flowsvr.data.po.TSchedulePos;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

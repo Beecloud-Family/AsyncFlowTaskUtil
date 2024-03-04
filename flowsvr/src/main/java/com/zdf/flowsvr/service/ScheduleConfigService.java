@@ -1,7 +1,7 @@
 package com.zdf.flowsvr.service;
 
 import com.zdf.flowsvr.data.ReturnStatus;
-import com.zdf.flowsvr.data.ScheduleConfig;
+import com.zdf.flowsvr.data.po.ScheduleConfig;
 
 public interface ScheduleConfigService {
     /**

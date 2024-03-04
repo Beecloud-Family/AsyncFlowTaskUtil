@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.zdf.flowsvr.dao.TSchedulePosDao">
 
-    <resultMap id="BaseResultMap" type="com.zdf.flowsvr.data.TSchedulePos">
+    <resultMap id="BaseResultMap" type="com.zdf.flowsvr.data.po.TSchedulePos">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="taskType" column="task_type" jdbcType="VARCHAR"/>
             <result property="dataBeginPos" column="data_begin_pos" jdbcType="INTEGER"/>
@@ -16,7 +16,7 @@
     </resultMap>
 
     <insert id="save"
-            parameterType="com.zdf.flowsvr.data.AsyncFlowTask"
+            parameterType="com.zdf.flowsvr.data.po.AsyncFlowTask"
             useGeneratedKeys="true" keyProperty="id">
         insert into t_schedule_pos (`task_type`,
                                     `data_begin_pos`,
@@ -28,12 +28,12 @@
         VALUES (#{taskType}, #{dataBeginPos}, #{dataEndPos}, #{scheduleBeginPos},
                 #{scheduleEndPos}, #{createTime}, #{modifyTime})
     </insert>
-    <select id="getTaskPos" resultType="com.zdf.flowsvr.data.TSchedulePos">
+    <select id="getTaskPos" resultType="com.zdf.flowsvr.data.po.TSchedulePos">
         select * from t_schedule_pos
         where
             task_type = #{task_type}
     </select>
-    <select id="getTaskPosList" resultType="com.zdf.flowsvr.data.TSchedulePos">
+    <select id="getTaskPosList" resultType="com.zdf.flowsvr.data.po.TSchedulePos">
         select * from t_schedule_pos
     </select>
 

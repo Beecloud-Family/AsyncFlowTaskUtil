@@ -9,7 +9,7 @@ namespace: 命名空间，用于标识每一个Mapper XML文件中的语句，�
         resultType: 也称为自动映射，只有在表的列名与POJO类的属性完全一致时使用，会比较方便，全类名
     -->
 
-    <resultMap id="getTaskList" type="com.zdf.flowsvr.data.AsyncFlowTask">
+    <resultMap id="getTaskList" type="com.zdf.flowsvr.data.po.AsyncFlowTask">
         <result column="id" jdbcType="BIGINT" property="id" />
         <result column="user_id" jdbcType="VARCHAR" property="user_id"/>
         <result column="task_id" jdbcType="VARCHAR" property="task_id"/>
@@ -35,7 +35,7 @@ namespace: 命名空间，用于标识每一个Mapper XML文件中的语句，�
             task_id = #{task_id}
     </update>
     <update id="updateTask"
-            parameterType="com.zdf.flowsvr.data.AsyncFlowTask">
+            parameterType="com.zdf.flowsvr.data.po.AsyncFlowTask">
         update
         ${tableName}
         set
@@ -103,7 +103,7 @@ namespace: 命名空间，用于标识每一个Mapper XML文件中的语句，�
         order by order_time
         limit #{limit}
     </select>
-    <select id="getAliveTaskList" resultType="com.zdf.flowsvr.data.AsyncFlowTask">
+    <select id="getAliveTaskList" resultType="com.zdf.flowsvr.data.po.AsyncFlowTask">
         select * from ${tableName}
         where
         status in
@@ -118,7 +118,7 @@ namespace: 命名空间，用于标识每一个Mapper XML文件中的语句，�
         where
             status = #{status}
     </select>
-    <select id="getLongTimeProcessing" resultType="com.zdf.flowsvr.data.AsyncFlowTask">
+    <select id="getLongTimeProcessing" resultType="com.zdf.flowsvr.data.po.AsyncFlowTask">
         select * from ${tableName}
         where
             status = #{status}
@@ -139,7 +139,7 @@ namespace: 命名空间，用于标识每一个Mapper XML文件中的语句，�
             #{status}
         </foreach>
     </select>
-    <select id="getTaskByUser_idAndStatus" resultType="com.zdf.flowsvr.data.AsyncFlowTask">
+    <select id="getTaskByUser_idAndStatus" resultType="com.zdf.flowsvr.data.po.AsyncFlowTask">
         select * from ${tableName}
         where
         user_id = #{user_id}

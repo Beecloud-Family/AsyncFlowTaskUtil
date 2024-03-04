@@ -8,7 +8,7 @@ namespace: 命名空间，用于标识每一个Mapper XML文件中的语句，�
     <!--
         resultType: 也称为自动映射，只有在表的列名与POJO类的属性完全一致时使用，会比较方便，全类名
     -->
-    <resultMap id="scheduleCFG" type="com.zdf.flowsvr.data.ScheduleConfig">
+    <resultMap id="scheduleCFG" type="com.zdf.flowsvr.data.po.ScheduleConfig">
         <result column="task_type" jdbcType="VARCHAR" property="task_type"/>
         <result column="schedule_limit" jdbcType="INTEGER" property="schedule_limit"/>
         <result column="schedule_interval" jdbcType="INTEGER" property="schedule_interval"/>
@@ -33,7 +33,7 @@ namespace: 命名空间，用于标识每一个Mapper XML文件中的语句，�
         select * from t_schedule_cfg
     </select>
     <insert id="save"
-            parameterType="com.zdf.flowsvr.data.ScheduleConfig">
+            parameterType="com.zdf.flowsvr.data.po.ScheduleConfig">
         INSERT INTO `t_schedule_cfg`(`task_type`,
                                     `schedule_limit`,
                                     `schedule_interval`,

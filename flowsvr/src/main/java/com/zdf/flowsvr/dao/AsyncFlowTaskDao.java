@@ -1,6 +1,6 @@
 package com.zdf.flowsvr.dao;
 
-import com.zdf.flowsvr.data.AsyncFlowTask;
+import com.zdf.flowsvr.data.po.AsyncFlowTask;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

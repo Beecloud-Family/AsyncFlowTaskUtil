@@ -4,7 +4,7 @@ import com.zdf.flowsvr.constant.ErrorStatusReturn;
 import com.zdf.flowsvr.dao.ScheduleConfigDao;
 import com.zdf.flowsvr.data.ConfigReturn;
 import com.zdf.flowsvr.data.ReturnStatus;
-import com.zdf.flowsvr.data.ScheduleConfig;
+import com.zdf.flowsvr.data.po.ScheduleConfig;
 import com.zdf.flowsvr.enums.ErrorStatus;
 import com.zdf.flowsvr.service.ScheduleConfigService;
 import org.slf4j.Logger;
