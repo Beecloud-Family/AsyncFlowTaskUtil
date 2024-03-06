@@ -42,7 +42,7 @@ public interface AsyncTaskService {
 
     /**
      * 获取指定用户的任务列表
-     * @param task_id
+     * @param user_id
      * @param <T>
      * @return
      */
@@ -58,4 +58,6 @@ public interface AsyncTaskService {
      * @return
      */
     <T> ReturnStatus<T> holdTask(String taskType, int status, int limit);
+
+    String getTableName (int pos, String taskType);
 }

@@ -6,10 +6,9 @@ import java.util.Collections;
 import java.util.UUID;
 
 public class RedisLock {
-    private Long tryLockEndTime;
-    private String lockValue;
-    private LockParam lockParam;
-    private final String LOCK_SUCCESS = "OK";
+    private final Long tryLockEndTime;
+    private final String lockValue;
+    private final LockParam lockParam;
     private final Long UNLOCK_SUCCESS = 1L;
     private final String passwd = "password";
     // KEY[1] = lockKey
@@ -55,12 +54,13 @@ public class RedisLock {
     public boolean tryLock() {
         String flag;
         flag = jedis.set(this.lockParam.getLockKey(), this.lockValue, "NX", "EX", this.lockParam.getHoldLockTime());
+        String LOCK_SUCCESS = "OK";
         if (LOCK_SUCCESS.equals(flag)) {
             return true;
         }
         return false;
     }
-    public boolean unlock() {
+    public boolean unLock() {
         Object eval ;
         try {
             // 执行lua脚本释放锁

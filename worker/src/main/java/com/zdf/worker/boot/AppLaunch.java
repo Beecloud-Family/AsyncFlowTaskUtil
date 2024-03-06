@@ -191,13 +191,14 @@ public class AppLaunch implements Launch {
             e.printStackTrace();
         } finally {
             // 释放锁
-            redisLock.unlock();
+            redisLock.unLock();
         }
         return null;
     }
 
     // 拉取任务配置信息
     private void loadCfg() {
+        // 调用flowsvr获取任务配置信息
         List<ScheduleConfig> taskTypeCfgList = taskFlower.getTaskTypeCfgList();
         for (ScheduleConfig scheduleConfig : taskTypeCfgList) {
             scheduleCfgDic.put(scheduleConfig.getTask_type(), scheduleConfig);
@@ -208,14 +209,13 @@ public class AppLaunch implements Launch {
     public int init() {
         loadCfg();
         if (scheduleLimit != 0) {
-            logger.debug("init ScheduleLimit : %d", scheduleLimit);
+            logger.debug("init ScheduleLimit : {}", scheduleLimit);
             concurrentRunTimes = scheduleLimit;
             MaxConcurrentRunTimes = scheduleLimit;
         } else {
             this.scheduleLimit = this.scheduleCfgDic.get(taskType.getSimpleName()).getSchedule_limit();
         }
         // 定期更新任务配置信息
-
         loadPool.scheduleAtFixedRate(this::loadCfg, cycleScheduleConfigTime, cycleScheduleConfigTime, TimeUnit.MILLISECONDS);
         return 0;
     }

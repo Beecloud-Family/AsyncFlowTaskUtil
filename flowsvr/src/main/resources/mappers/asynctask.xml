@@ -213,4 +213,36 @@ namespace: 命名空间，用于标识每一个Mapper XML文件中的语句，�
 
     </insert>
 
+    <select id="returnTaskCount" resultType="java.lang.Integer" parameterType="java.lang.String">
+        select count(*) from ${tableName}
+    </select>
+
+    <!-- 调用上面定义的SQL语句来创建表 -->
+    <insert id="createTable" parameterType="java.lang.String">
+        CREATE TABLE ${tableName}
+        (
+            `id`                 int(11)                                  NOT NULL AUTO_INCREMENT,
+            `user_id`            varchar(256) COLLATE utf8mb4_unicode_ci  NOT NULL DEFAULT '',
+            `task_id`            varchar(256) COLLATE utf8mb4_unicode_ci  NOT NULL DEFAULT '',
+            `task_type`          varchar(128) COLLATE utf8mb4_unicode_ci  NOT NULL DEFAULT '',
+            `task_stage`         varchar(128) COLLATE utf8mb4_unicode_ci  NOT NULL DEFAULT '',
+            `status`             tinyint(3) unsigned                      NOT NULL DEFAULT '0',
+            `priority`           int(11)                                  NOT NULL DEFAULT '0' COMMENT '优先级',
+            `crt_retry_num`      int(11)                                  NOT NULL DEFAULT '0' COMMENT '已经重试几次了',
+            `max_retry_num`      int(11)                                  NOT NULL DEFAULT '0' COMMENT '最大能重试几次',
+            `max_retry_interval` int(11)                                  NOT NULL DEFAULT '0' COMMENT '最大重试间隔',
+            `schedule_log`       varchar(4096) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '调度信息记录',
+            `task_context`       varchar(8192) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '任务上下文，用户自定义',
+            `order_time`         bigint                                   NOT NULL DEFAULT '0' COMMENT '调度时间，越小调度越优先',
+            `create_time`        bigint,
+            `modify_time`        bigint,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `idx_task_id` (`task_id`),
+            KEY `idx_user_id` (`user_id`),
+            KEY `idx_status` (`status`),
+            KEY `idx_tasktype_status_modify_time` (`status`, `order_time`)
+        ) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+    </insert>
 </mapper>

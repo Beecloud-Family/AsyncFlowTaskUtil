@@ -12,10 +12,14 @@ spring:
     druid:
         min-idle: 1                                          # 最小连接数
         max-active: 8                                         # 最大连接数(默认8)
-        max-wait: 1000                                       # 获取连接时的最大等待时间
+        max-wait: 200000                                       # 获取连接时的最大等待时间
         min-evictable-idle-time-millis: 300000               # 一个连接在池中最小生存的时间，单位是毫秒
         time-between-eviction-runs-millis: 60000             # 多久才进行一次检测需要关闭的空闲连接，单位是毫秒
-
+  redis:
+    database: 0
+    password: Tt98.0512
+    host: 114.55.61.179
+    port: 6379
 mybatis:
   mapper-locations: classpath:mappers/*.xml
   type-aliases-package: com.zdf.flowsvr.data
@@ -23,3 +27,12 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 线程池配置参数
+thread-pool:
+  corePoolSize: 5 # 设置核心线程数
+  maxPoolSize: 20 # 设置最大线程数
+  keepAliveSeconds: 300 # 设置空闲线程存活时间（秒）
+  queueCapacity: 50 # 设置队列容量
+  threadNamePrefix: "-customAsyncThreadPool-" # 设置线程名称前缀
+  awaitTerminationSeconds: 60 #  设置线程池等待终止时间(秒)

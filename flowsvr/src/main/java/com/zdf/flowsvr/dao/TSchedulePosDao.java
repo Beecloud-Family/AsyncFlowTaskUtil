@@ -25,4 +25,6 @@ public interface TSchedulePosDao {
     TSchedulePos getTaskPos(@Param("task_type") String task_type);
 
     List<TSchedulePos> getTaskPosList();
+
+    void update(@Param("tSchedulePos") TSchedulePos tSchedulePos);
 }

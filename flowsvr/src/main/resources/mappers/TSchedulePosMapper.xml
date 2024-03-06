@@ -7,8 +7,6 @@
     <resultMap id="BaseResultMap" type="com.zdf.flowsvr.data.po.TSchedulePos">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="taskType" column="task_type" jdbcType="VARCHAR"/>
-            <result property="dataBeginPos" column="data_begin_pos" jdbcType="INTEGER"/>
-            <result property="dataEndPos" column="data_end_pos" jdbcType="INTEGER"/>
             <result property="scheduleBeginPos" column="schedule_begin_pos" jdbcType="INTEGER"/>
             <result property="scheduleEndPos" column="schedule_end_pos" jdbcType="INTEGER"/>
             <result property="createTime" column="create_time" jdbcType="BIGINT"/>
@@ -28,6 +26,14 @@
         VALUES (#{taskType}, #{dataBeginPos}, #{dataEndPos}, #{scheduleBeginPos},
                 #{scheduleEndPos}, #{createTime}, #{modifyTime})
     </insert>
+    <update id="update" parameterType="com.zdf.flowsvr.data.po.TSchedulePos">
+        update t_schedule_pos
+        set
+            schedule_begin_pos = #{schedule_begin_pos},
+            schedule_end_pos = #{schedule_end_pos},
+            modify_time = #{modify_time}
+        where id = #{id}
+    </update>
     <select id="getTaskPos" resultType="com.zdf.flowsvr.data.po.TSchedulePos">
         select * from t_schedule_pos
         where

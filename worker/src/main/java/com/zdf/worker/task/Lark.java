@@ -1,14 +1,18 @@
 package com.zdf.worker.task;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.zdf.worker.data.AsyncTaskSetStage;
 import com.zdf.worker.data.NftTaskContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 
 // 测试任务
 // 此处可以定义自己的任务
 public class Lark implements AsyncExecutable {
+
+    private static final Logger logger = LoggerFactory.getLogger(Lark.class);
     public TaskRet printMsg(String msg) {
         System.out.println("The printed msg is: " + msg);
         AsyncTaskSetStage asyncTaskSetStage = null;
@@ -16,6 +20,7 @@ public class Lark implements AsyncExecutable {
             Method method = this.getClass().getMethod("printMsg2", String.class);
             asyncTaskSetStage = setStage(this.getClass(), method.getName(), new Object[]{"我要开花！"}, method.getParameterTypes());
         } catch (NoSuchMethodException e) {
+            logger.error(e.getMessage());
             e.printStackTrace();
         }
         return new TaskRet("SUCCESS", asyncTaskSetStage);

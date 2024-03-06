@@ -1,5 +1,7 @@
 package com.zdf.flowsvr.service.impl;
 
+import cn.hutool.core.util.StrUtil;
+import com.zdf.flowsvr.config.TaskThreadPoolConfig;
 import com.zdf.flowsvr.constant.ErrorStatusReturn;
 import com.zdf.flowsvr.constant.Task;
 import com.zdf.flowsvr.dao.AsyncFlowTaskDao;
@@ -12,15 +14,19 @@ import com.zdf.flowsvr.data.po.TSchedulePos;
 import com.zdf.flowsvr.enums.ErrorStatus;
 import com.zdf.flowsvr.enums.TaskStatus;
 import com.zdf.flowsvr.service.AsyncTaskService;
+import com.zdf.flowsvr.util.RedisUtil;
 import com.zdf.flowsvr.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 
@@ -40,6 +46,12 @@ public class AsyncTaskServiceImpl implements AsyncTaskService {
     @Autowired
     private TSchedulePosDao tSchedulePosDao;
 
+    @Autowired
+    private Executor customAsyncThreadPool;
+
+    @Autowired
+    private RedisUtil redisUtil;
+
 
     private AsyncFlowClientData getAsyncFlowClientData(AsyncTaskRequest asyncTaskGroup) {
         AsyncFlowClientData asyncFlowClientData = asyncTaskGroup.getTaskData();
@@ -52,8 +64,9 @@ public class AsyncTaskServiceImpl implements AsyncTaskService {
         AsyncFlowClientData asyncFlowClientData = getAsyncFlowClientData(asyncTaskRequest);
         // 获取当前任务类型的调度情况(当前任务类型正在调度了哪些:调度开始于几号表结束于几号表)
         TSchedulePos taskPos = null;
+        String taskType = asyncFlowClientData.getTask_type();
         try {
-            taskPos = tSchedulePosDao.getTaskPos(asyncFlowClientData.getTask_type());
+            taskPos = tSchedulePosDao.getTaskPos(taskType);
         } catch (Exception e) {
             return ErrorStatusReturn.ERR_GET_TASK_POS;
         }
@@ -63,19 +76,20 @@ public class AsyncTaskServiceImpl implements AsyncTaskService {
         // scheduleEndPos调度到结束于几号表
         // tableName的格式是 t_(taskType类型的小写)_task_(scheduleEndPos的值)
         // 获取到当前任务类型正在调度的表名
-        String tableName = getTableName(taskPos.getScheduleEndPos(), asyncFlowClientData.getTask_type());
+        Integer scheduleEndPos = taskPos.getScheduleEndPos();
+        String tableName = getTableName(scheduleEndPos, taskType);
 
         // 获取当前任务类型的定时配置
         ScheduleConfig taskTypeCfg;
         try {
-            taskTypeCfg = scheduleConfigDao.getTaskTypeCfg(asyncFlowClientData.getTask_type());
+            taskTypeCfg = scheduleConfigDao.getTaskTypeCfg(taskType);
         } catch (Exception e) {
             logger.error("Visit t_task_type_cfg error");
             return ErrorStatusReturn.ERR_GET_TASK_SET_POS_FROM_DB;
         }
 
         AsyncFlowTask asyncFlowTask = new AsyncFlowTask();
-        String taskId = getTaskId(asyncFlowClientData.getTask_type(), taskPos.getScheduleEndPos());
+        String taskId = getTaskId(taskType, scheduleEndPos);
         try {
             // 将asyncFlowClientData的数据填充到asyncFlowTask,设置asyncFlowTask的任务id和将该任务类型的定时配置的最大重试间隔和次数赋予这个asyncFlowTask
             // 将任务插入到当前任务类型正在调度的表
@@ -87,8 +101,26 @@ public class AsyncTaskServiceImpl implements AsyncTaskService {
             return ErrorStatusReturn.ERR_CREATE_TASK;
 
         }
+        customAsyncThreadPool.execute(() -> updateTaskAmountAndScheduleEndPos(tableName, scheduleEndPos, taskType));
         TaskResult taskResult = new TaskResult(taskId);
         return new ReturnStatus(taskResult);
+    }
+
+    private void updateTaskAmountAndScheduleEndPos(String oldTableName, Integer scheduleEndPos, String taskType) {
+        // redis里将任务对应的表名在缓存里 + 1表示表中数据的量
+        long incr = redisUtil.incr(oldTableName, 1);
+        if (5000000 - incr <= 1000) {
+            // 生成表 更新调度表中对应任务类型的调度值
+            String newTaskTableName = getTableName(scheduleEndPos + 1, taskType);
+            asyncFlowTaskDao.createTable(newTaskTableName);
+            TSchedulePos taskPos = tSchedulePosDao.getTaskPos(taskType);
+            if (taskPos != null) {
+                taskPos.setScheduleBeginPos(scheduleEndPos);
+                taskPos.setScheduleEndPos(scheduleEndPos + 1);
+                taskPos.setModifyTime(System.currentTimeMillis());
+                tSchedulePosDao.update(taskPos);
+            }
+        }
     }
 
     private String getTaskId(String taskType, int taskPos) {
@@ -387,6 +419,7 @@ public class AsyncTaskServiceImpl implements AsyncTaskService {
         }};
     }
 
+    @Override
     public String getTableName(int pos, String taskType) {
         return "t_" + taskType.toLowerCase() + "_" + this.tableName() + "_" + pos;
     }

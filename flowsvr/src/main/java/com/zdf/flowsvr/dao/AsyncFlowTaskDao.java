@@ -10,9 +10,8 @@ import java.util.List;
 public interface AsyncFlowTaskDao {
     /**
      * 创建任务
-     *
+     *  @param tableName
      * @param asyncFlowTask
-     * @param tableName
      */
     void create(@Param("tableName") String tableName, @Param("asyncFlowTask") AsyncFlowTask asyncFlowTask);
 
@@ -156,4 +155,8 @@ public interface AsyncFlowTaskDao {
      */
     int updateStatusBatch(@Param("ids") List<String> ids, @Param("status") int status,
                           @Param("modifyTime") long modifyTime, @Param("tableName") String tableName);
+
+    int returnTaskCount(@Param("tableName") String tableName);
+
+    void createTable(@Param("tableName") String tableName);
 }

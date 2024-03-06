@@ -1,6 +1,6 @@
 package com.zdf.worker.task;
 
-import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson2.JSON;
 import com.zdf.worker.constant.UserConfig;
 import com.zdf.worker.data.AsyncFlowClientData;
 import com.zdf.worker.data.NftTaskContext;
